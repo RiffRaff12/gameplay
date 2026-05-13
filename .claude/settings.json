@@ -16,7 +16,9 @@
       "Bash(mkdir -p *)",
       "Bash(git add *)",
       "Bash(git status)",
-      "Bash(git commit -am *)"
+      "Bash(git commit -am *)",
+      "Bash(node *)",
+      "Bash(node -e *)"
     ]
   }
 }
