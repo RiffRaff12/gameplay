@@ -3,41 +3,13 @@ import { notFound, redirect } from 'next/navigation'
 import { getSession } from '@/lib/sessions/actions'
 import { deleteSession } from '@/lib/sessions/actions'
 import { getRoster, removePlayerFromSession } from '@/lib/session-players/actions'
-import type { PaymentStatus } from '@/lib/session-players/types'
 import AddPlayerForm from './_components/AddPlayerForm'
+import StatusPicker from './_components/StatusPicker'
 
 type Props = {
   params: Promise<{ id: string }>
 }
 
-function paymentBadge(status: PaymentStatus) {
-  switch (status) {
-    case 'paid':
-      return (
-        <span className="inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-          Paid
-        </span>
-      )
-    case 'pending':
-      return (
-        <span className="inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-          Pending
-        </span>
-      )
-    case 'free':
-      return (
-        <span className="inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-          Free
-        </span>
-      )
-    case 'cancelled':
-      return (
-        <span className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
-          Cancelled
-        </span>
-      )
-  }
-}
 
 export default async function SessionDetailPage({ params }: Props) {
   const { id } = await params
@@ -135,7 +107,7 @@ export default async function SessionDetailPage({ params }: Props) {
                   <span className="text-xs text-gray-500">{sp.player.phone_number}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {paymentBadge(sp.payment_status)}
+                  <StatusPicker sessionPlayerId={sp.id} currentStatus={sp.payment_status} />
                   <form action={handleRemove}>
                     <input type="hidden" name="sessionPlayerId" value={sp.id} />
                     <button

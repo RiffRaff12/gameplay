@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import type { SessionPlayer } from './types'
+import type { SessionPlayer, PaymentStatus } from './types'
 
 export async function getRoster(sessionId: string): Promise<SessionPlayer[]> {
   const supabase = await createClient()
@@ -75,4 +75,20 @@ export async function removePlayerFromSession(sessionPlayerId: string): Promise<
   if (error) throw new Error(error.message)
 
   // Revalidate will be handled by the caller via router.refresh or revalidatePath
+}
+
+export async function updatePaymentStatus(
+  sessionPlayerId: string,
+  status: PaymentStatus
+): Promise<void> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('session_players')
+    .update({ payment_status: status })
+    .eq('id', sessionPlayerId)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/sessions')
 }
