@@ -1,0 +1,2 @@
+-- Baseline migration — schema defined in subsequent migrations.
+-- This file establishes the migrations runner starting point.
