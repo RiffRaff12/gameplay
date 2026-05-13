@@ -5,6 +5,7 @@ import { deleteSession } from '@/lib/sessions/actions'
 import { getRoster, removePlayerFromSession } from '@/lib/session-players/actions'
 import AddPlayerForm from './_components/AddPlayerForm'
 import StatusPicker from './_components/StatusPicker'
+import SessionSummaryPanel from './_components/SessionSummaryPanel'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -87,6 +88,9 @@ export default async function SessionDetailPage({ params }: Props) {
           </div>
         </dl>
       </div>
+
+      {/* Summary */}
+      <SessionSummaryPanel roster={roster} pricePerPax={session.price_per_pax} />
 
       {/* Roster */}
       <div className="mt-6">

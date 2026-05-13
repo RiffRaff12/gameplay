@@ -13,7 +13,10 @@
       "Bash(gh issue edit *)",
       "Bash(npx tsc --noEmit)",
       "Bash(npm run lint)",
-      "Bash(mkdir -p *)"
+      "Bash(mkdir -p *)",
+      "Bash(git add *)",
+      "Bash(git status)",
+      "Bash(git commit -am *)"
     ]
   }
 }
