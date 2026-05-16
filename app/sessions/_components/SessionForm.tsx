@@ -1,6 +1,7 @@
 'use client'
 
 import { useReducer } from 'react'
+import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { SportType, SPORT_TEMPLATES } from '@/config/sport-templates'
 import { getNextSlot } from '@/lib/sessions/utils'
@@ -84,13 +85,27 @@ function buildInitialState(defaultValues?: Partial<Session>): FormState {
   }
 }
 
-type Props = {
-  action: (formData: FormData) => Promise<void>
-  submitLabel: string
-  defaultValues?: Partial<Session>
+function SubmitButton({ label }: { label: string }) {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Saving…' : label}
+    </button>
+  )
 }
 
-export default function SessionForm({ action, submitLabel, defaultValues }: Props) {
+type Props = {
+  action: (formData: FormData) => void | Promise<void>
+  submitLabel: string
+  defaultValues?: Partial<Session>
+  onCancel?: () => void
+}
+
+export default function SessionForm({ action, submitLabel, defaultValues, onCancel }: Props) {
   const isNew = !defaultValues
   const [state, dispatch] = useReducer(reducer, undefined, () => buildInitialState(defaultValues))
 
@@ -190,18 +205,24 @@ export default function SessionForm({ action, submitLabel, defaultValues }: Prop
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-        >
-          {submitLabel}
-        </button>
-        <Link
-          href="/sessions"
-          className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Cancel
-        </Link>
+        <SubmitButton label={submitLabel} />
+
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        ) : (
+          <Link
+            href="/sessions"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </Link>
+        )}
       </div>
     </form>
   )

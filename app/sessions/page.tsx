@@ -6,14 +6,8 @@ export default async function SessionsPage() {
 
   return (
     <main className="min-h-screen p-4 max-w-2xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Sessions</h1>
-        <Link
-          href="/sessions/new"
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-        >
-          New Session
-        </Link>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Past Sessions</h1>
       </div>
 
       {sessions.length === 0 ? (

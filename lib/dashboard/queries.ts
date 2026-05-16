@@ -2,35 +2,40 @@
 
 import { createClient } from '@/lib/supabase/server'
 
-export type DashboardSession = {
+export type UpcomingSession = {
   id: string
   sport_type: string
   date: string
   start_time: string
+  end_time: string
   capacity: number
   price_per_pax: number
   headcount: number
-  pending_count: number
-  paid_count: number
+  spots_remaining: number
 }
 
-export async function getDashboardSessions(): Promise<DashboardSession[]> {
+export async function getUpcomingSessions(now = new Date()): Promise<UpcomingSession[]> {
   const supabase = await createClient()
 
-  const cutoff = new Date()
-  cutoff.setDate(cutoff.getDate() - 28)
-  const cutoffStr = cutoff.toISOString().slice(0, 10)
+  const todayStr = now.toISOString().slice(0, 10)
+  const nowTimeStr = now.toTimeString().slice(0, 8)
 
   const { data: sessions, error: sessionsError } = await supabase
     .from('sessions')
-    .select('id, sport_type, date, start_time, capacity, price_per_pax')
-    .gte('date', cutoffStr)
-    .order('date', { ascending: false })
+    .select('id, sport_type, date, start_time, end_time, capacity, price_per_pax')
+    .gte('date', todayStr)
+    .order('date', { ascending: true })
 
   if (sessionsError) throw new Error(sessionsError.message)
   if (!sessions || sessions.length === 0) return []
 
-  const sessionIds = sessions.map((s) => s.id)
+  const upcoming = (sessions as UpcomingSession[]).filter(s =>
+    s.date > todayStr || s.end_time > nowTimeStr
+  )
+
+  if (upcoming.length === 0) return []
+
+  const sessionIds = upcoming.map(s => s.id)
 
   const { data: players, error: playersError } = await supabase
     .from('session_players')
@@ -39,38 +44,16 @@ export async function getDashboardSessions(): Promise<DashboardSession[]> {
 
   if (playersError) throw new Error(playersError.message)
 
-  const countMap = new Map<string, { headcount: number; pending_count: number; paid_count: number }>()
-
-  for (const session of sessions) {
-    countMap.set(session.id, { headcount: 0, pending_count: 0, paid_count: 0 })
-  }
-
-  for (const player of players ?? []) {
-    const counts = countMap.get(player.session_id)
-    if (!counts) continue
-    if (player.payment_status !== 'cancelled') {
-      counts.headcount++
-    }
-    if (player.payment_status === 'pending') {
-      counts.pending_count++
-    }
-    if (player.payment_status === 'paid') {
-      counts.paid_count++
+  const headcountMap = new Map<string, number>()
+  for (const s of upcoming) headcountMap.set(s.id, 0)
+  for (const p of (players ?? []) as { session_id: string; payment_status: string }[]) {
+    if (p.payment_status !== 'cancelled') {
+      headcountMap.set(p.session_id, (headcountMap.get(p.session_id) ?? 0) + 1)
     }
   }
 
-  return sessions.map((session) => {
-    const counts = countMap.get(session.id) ?? { headcount: 0, pending_count: 0, paid_count: 0 }
-    return {
-      id: session.id,
-      sport_type: session.sport_type,
-      date: session.date,
-      start_time: session.start_time,
-      capacity: session.capacity,
-      price_per_pax: session.price_per_pax,
-      headcount: counts.headcount,
-      pending_count: counts.pending_count,
-      paid_count: counts.paid_count,
-    }
+  return upcoming.map(s => {
+    const headcount = headcountMap.get(s.id) ?? 0
+    return { ...s, headcount, spots_remaining: s.capacity - headcount }
   })
 }
